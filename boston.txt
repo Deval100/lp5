@@ -1,0 +1,40 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
+from tensorflow.keras import layers, models, datasets
+
+df = pd.read_csv("/content/1_boston_housing.csv")
+df.head()
+df.isnull().sum()
+
+X = df.loc[:,df.columns!='MEDV']
+Y = df.loc[:,df.columns=='MEDV']
+
+X_train, X_test, Y_train, Y_test = train_test_split(X,Y,test_size=0.25,random_state=1)
+
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+model = models.Sequential([
+    layers.Dense(128, activation='relu'),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(1, activation='linear')
+    ])
+ 
+model.compile(optimizer='adam',loss='mse',metrics=['mae'])
+
+history = model.fit(X_train,Y_train,epochs=100,validation_split=0.05,verbose=1)
+Y_pred = model.predict(X_test)
+model.summary()
+
+for pred, actual in zip(Y_pred,Y_test.values):
+  print(f"Predicted : {pred}, Actual : {actual}")
+     
+
+mse, mae = model.evaluate(Y_train,Y_test)
+
+print("Mean Absolute Error in Prediction : ", mae)
+print("Mean Squared Error in Prediction : ", mse)
